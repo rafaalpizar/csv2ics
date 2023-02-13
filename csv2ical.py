@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import csv
 import os
 import sys
@@ -24,21 +26,21 @@ if __name__ == "__main__":
         for row in csv_reader:
             if line_count >= 0:
                 start, end = (
-                    dateparser.parse(row["start"]).date(),
-                    dateparser.parse(row["end"]),
+                    dateparser.parse(row["Start Date"]+" "+row["Start Time"]),
+                    dateparser.parse(row["End Date"]+" "+row["End Time"]),
                 )
                 if not end:  # bad/no end date, make it tomorrow
                     end = start + timedelta(days=1)
                 else:
-                    end = end.date()
-                print(f"📅 {start} ➡️ {end}: {row['description']}")
-                if row["description"].lower() == "Y":
+                    end = end
+                print(f"{start} ➡️ {end}: {row['Description']}")
+                if row["Description"].lower() == "Y":
                     transparency = "TRANSPARENT"  # outlook calls this Free
                 else:
                     transparency = "OPAQUE"
                 cal.events.append(
                     Event(
-                        summary=row["description"],
+                        summary=row["Description"],
                         start=start,
                         end=end,
                         transparency=transparency,
@@ -47,12 +49,13 @@ if __name__ == "__main__":
             line_count += 1
     print(f"Processed {line_count} lines.")
 
-    # FIXME Hack to add X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
-    #   so outlook makes it all day instead of 12am-12am
     ics_string = IcsCalendarStream.calendar_to_ics(cal)
-    regex = r"^END:VEVENT"
-    subst = "X-MICROSOFT-CDO-ALLDAYEVENT:TRUE\\nEND:VEVENT"
-    ics_string = re.sub(regex, subst, ics_string, 0, re.MULTILINE)
+
+    # Extra fields
+    # To be added based on a condition for all day and outlook
+    # regex = r"^END:VEVENT"
+    # subst = "X-MICROSOFT-CDO-ALLDAYEVENT:TRUE\\nEND:VEVENT"
+    # ics_string = re.sub(regex, subst, ics_string, 0, re.MULTILINE)
 
     filename = Path(f"{base_name}.ics")
     with filename.open("w") as ics_file:
