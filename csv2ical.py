@@ -33,7 +33,7 @@ if __name__ == "__main__":
                     end = start + timedelta(days=1)
                 else:
                     end = end
-                print(f"{start} ➡️ {end}: {row['Description']}")
+                print(f"{start} ➡️ {end}: {row['Description'], row['Location']}")
                 if row["Description"].lower() == "Y":
                     transparency = "TRANSPARENT"  # outlook calls this Free
                 else:
@@ -44,6 +44,7 @@ if __name__ == "__main__":
                         start=start,
                         end=end,
                         transparency=transparency,
+                        location=row["Location"]
                     )
                 )
             line_count += 1
