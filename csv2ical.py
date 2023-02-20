@@ -6,14 +6,14 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 from uuid import uuid4
-
 import dateparser
-
 import re
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
+from ical.types import Recur
+from ical.types.recur import Frequency
 
 if __name__ == "__main__":
     csv_file_input = sys.argv[1]
@@ -34,17 +34,17 @@ if __name__ == "__main__":
                 else:
                     end = end
                 print(f"{start} ➡️ {end}: {row['Description'], row['Location']}")
-                if row["Description"].lower() == "Y":
-                    transparency = "TRANSPARENT"  # outlook calls this Free
-                else:
-                    transparency = "OPAQUE"
+                until = dateparser.parse(row["Until Date"]+" "+row["End Time"])
+                # TODO: Set frequency from csv file
+                rrule = Recur(freq=Frequency.WEEKLY, until=until)
                 cal.events.append(
                     Event(
-                        summary=row["Description"],
                         start=start,
                         end=end,
-                        transparency=transparency,
-                        location=row["Location"]
+                        summary=row["Description"],
+                        transparency=row["Transp"],
+                        location=row["Location"],
+                        rrule=rrule
                     )
                 )
             line_count += 1
@@ -53,8 +53,9 @@ if __name__ == "__main__":
     ics_string = IcsCalendarStream.calendar_to_ics(cal)
 
     # Extra fields
-    # To be added based on a condition for all day and outlook
     # regex = r"^END:VEVENT"
+
+    # To be added based on a condition for all day and outlook
     # subst = "X-MICROSOFT-CDO-ALLDAYEVENT:TRUE\\nEND:VEVENT"
     # ics_string = re.sub(regex, subst, ics_string, 0, re.MULTILINE)
 
